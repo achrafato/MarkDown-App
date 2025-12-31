@@ -7,7 +7,11 @@ import { Card } from '@/components/ui/card';
 import { getCurrentUser } from '@/lib/auth';
 import type { Post } from '@/lib/db/queries';
 import hljs from 'highlight.js';
-import 'highlight.js/styles/github-dark.css'; // or any theme you like
+import 'highlight.js/styles/github-dark.css';
+import { getPostById, updatePost, deletePost } from '@/lib/db/queries';
+import { getAllPublishedPosts } from '@/lib/db/queries';
+import { getPostComments } from '@/lib/db/queries';
+
 
 // Configure marked using the new API
 marked.use({
@@ -38,56 +42,9 @@ interface PostWithAuthor extends Post {
   };
 }
 
-async function getPost(id: string): Promise<PostWithAuthor | null> {
-  try {
-    const baseUrl = process.env.NEXTAUTH_URL || 'http://localhost:3000';
-    const res = await fetch(`${baseUrl}/api/posts/${id}`, {
-      next: { revalidate: 3600 }, // Revalidate every hour
-    });
-    if (!res.ok) {
-      return null;
-    }
-    return res.json();
-  } catch (error) {
-    console.error('Error fetching post:', error);
-    return null;
-  }
-}
-
-async function getPublishedPosts(): Promise<PostWithAuthor[]> {
-  try {
-    const baseUrl = process.env.NEXTAUTH_URL || 'http://localhost:3000';
-    const res = await fetch(`${baseUrl}/api/posts/published?limit=1000`, {
-      next: { revalidate: 3600 },
-    });
-    if (!res.ok) {
-      return [];
-    }
-    return res.json();
-  } catch (error) {
-    console.error('Error fetching posts:', error);
-    return [];
-  }
-}
-
-async function getComments(postId: number): Promise<any[]> {
-  try {
-    const baseUrl = process.env.NEXTAUTH_URL || 'http://localhost:3000';
-    const res = await fetch(`${baseUrl}/api/posts/${postId}/comments`, {
-      next: { tags: [`comments-${postId}`] }
-    });
-    if (!res.ok) {
-      return [];
-    }
-    return res.json();
-  } catch (error) {
-    console.error('Error fetching comments:', error);
-    return [];
-  }
-}
 
 export async function generateStaticParams() {
-  const posts = await getPublishedPosts();
+  const posts = await getAllPublishedPosts();
   return posts.map((post) => ({
     id: post.id.toString(),
   }));
@@ -99,14 +56,14 @@ export default async function PostPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const post = await getPost(id);
+  const post = await getPostById(parseInt(id));
   const currentUser = await getCurrentUser();
 
   if (!post) {
     notFound();
   }
 
-  const comments = await getComments(post.id);
+  const comments = await getPostComments(post.id);
   const htmlContent = await marked(post.content);
 
   return (
