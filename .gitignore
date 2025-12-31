@@ -1,0 +1,31 @@
+# Node.js dependencies
+node_modules/
+
+# Next.js build output
+.next/
+
+# .env files for environment variables (sensitive information)
+.env
+.env.local
+.env.development
+.env.production
+.env.test
+
+# Next.js static files (if you are using export)
+out/
+
+# Log files
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS-specific files
+.DS_Store   # macOS
+Thumbs.db   # Windows
+
+# IDE/editor settings
+.vscode/
+.idea/
+
+# TypeScript cache (if using TypeScript)
+*.tsbuildinfo
